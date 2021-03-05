@@ -42,6 +42,7 @@ void matmul_simd(float **A,float **B,float **C)
     for (j = 0; j < 512; j++) {
       temp = 0;
       __m512 __vec0 = _mm512_set1_ps(temp);
+      __m512 __part7 = _mm512_setzero_ps();
       for (k = 0; k <= 511; k += 16) {
         float *__ptr1 = A[i];
         __m512 __vec2 = _mm512_loadu_ps(&__ptr1[k]);
@@ -49,15 +50,16 @@ void matmul_simd(float **A,float **B,float **C)
         __m512 __vec4 = _mm512_loadu_ps(&__ptr3[k]);
         __m512 __vec5 = _mm512_mul_ps(__vec4,__vec2);
         __m512 __vec6 = _mm512_add_ps(__vec5,__vec0);
-        __m256 __buf0 = _mm512_extractf32x8_ps(__vec6,0);
-        __m256 __buf1 = _mm512_extractf32x8_ps(__vec6,1);
-        __buf1 = _mm256_add_ps(__buf0,__buf1);
-        __buf1 = _mm256_hadd_ps(__buf1,__buf1);
-        __buf1 = _mm256_hadd_ps(__buf1,__buf1);
-        float __buf2[8];
-        _mm256_storeu_ps(&__buf2,__buf1);
-        temp += __buf2[0] + __buf2[6];
+        __part7 = _mm512_add_ps(__part7,__vec6);
       }
+      __m256 __buf0 = _mm512_extractf32x8_ps(__part7,0);
+      __m256 __buf1 = _mm512_extractf32x8_ps(__part7,1);
+      __buf1 = _mm256_add_ps(__buf0,__buf1);
+      __buf1 = _mm256_hadd_ps(__buf1,__buf1);
+      __buf1 = _mm256_hadd_ps(__buf1,__buf1);
+      float __buf2[8];
+      _mm256_storeu_ps(&__buf2,__buf1);
+      temp = __buf2[0] + __buf2[6];
       C[i][j] = temp;
     }
   }

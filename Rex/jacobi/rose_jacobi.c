@@ -298,10 +298,10 @@ void jacobi_omp(int n,int m,float dx,float dy,float alpha,float omega,float *u_p
 /* Copy new solution into old */
     for (i = 0; i < n; i++) {
       for (j = 0; j <= m - 1; j += 16) {
-        float *__ptr37 = uold[i];
-        float *__ptr38 = u[i];
-        __m512 __vec39 = _mm512_loadu_ps(&__ptr38[j]);
-        _mm512_storeu_ps(&__ptr37[j],__vec39);
+        float *__ptr39 = uold[i];
+        float *__ptr40 = u[i];
+        __m512 __vec41 = _mm512_loadu_ps(&__ptr40[j]);
+        _mm512_storeu_ps(&__ptr39[j],__vec41);
       }
     }
     for (i = 1; i < n - 1; i++) {
@@ -309,11 +309,13 @@ void jacobi_omp(int n,int m,float dx,float dy,float alpha,float omega,float *u_p
       __m512 __vec7 = _mm512_set1_ps(ay);
       __m512 __vec15 = _mm512_set1_ps(b);
       __m512 __vec23 = _mm512_set1_ps(b);
-      __m512 __vec28 = _mm512_set1_ps(omega);
-      __m512 __vec29 = _mm512_set1_ps(resid);
-      __m512 __vec32 = _mm512_set1_ps(error);
-      __m512 __vec33 = _mm512_set1_ps(resid);
+      __m512 __part25 = _mm512_setzero_ps();
+      __m512 __vec29 = _mm512_set1_ps(omega);
+      __m512 __vec30 = _mm512_set1_ps(resid);
+      __m512 __vec33 = _mm512_set1_ps(error);
       __m512 __vec34 = _mm512_set1_ps(resid);
+      __m512 __vec35 = _mm512_set1_ps(resid);
+      __m512 __part38 = _mm512_setzero_ps();
       for (j = 1; j <= m - 1 - 1; j += 16) {
         float *__ptr1 = uold[i - 1];
         __m512 __vec2 = _mm512_loadu_ps(&__ptr1[j]);
@@ -336,31 +338,33 @@ void jacobi_omp(int n,int m,float dx,float dy,float alpha,float omega,float *u_p
         __m512 __vec21 = _mm512_loadu_ps(&__ptr20[j]);
         __m512 __vec22 = _mm512_sub_ps(__vec21,__vec19);
         __m512 __vec24 = _mm512_div_ps(__vec23,__vec22);
-        __m256 __buf0 = _mm512_extractf32x8_ps(__vec24,0);
-        __m256 __buf1 = _mm512_extractf32x8_ps(__vec24,1);
-        __buf1 = _mm256_add_ps(__buf0,__buf1);
-        __buf1 = _mm256_hadd_ps(__buf1,__buf1);
-        __buf1 = _mm256_hadd_ps(__buf1,__buf1);
-        float __buf2[8];
-        _mm256_storeu_ps(&__buf2,__buf1);
-        resid += __buf2[0] + __buf2[6];
-        float *__ptr25 = u[i];
-        float *__ptr26 = uold[i];
-        __m512 __vec27 = _mm512_loadu_ps(&__ptr26[j]);
-        __m512 __vec30 = _mm512_mul_ps(__vec29,__vec28);
-        __m512 __vec31 = _mm512_sub_ps(__vec30,__vec27);
-        _mm512_storeu_ps(&__ptr25[j],__vec31);
-        __m512 __vec35 = _mm512_mul_ps(__vec34,__vec33);
-        __m512 __vec36 = _mm512_add_ps(__vec35,__vec32);
-        __m256 __buf3 = _mm512_extractf32x8_ps(__vec36,0);
-        __m256 __buf4 = _mm512_extractf32x8_ps(__vec36,1);
-        __buf4 = _mm256_add_ps(__buf3,__buf4);
-        __buf4 = _mm256_hadd_ps(__buf4,__buf4);
-        __buf4 = _mm256_hadd_ps(__buf4,__buf4);
-        float __buf5[8];
-        _mm256_storeu_ps(&__buf5,__buf4);
-        error += __buf5[0] + __buf5[6];
+        __part25 = _mm512_add_ps(__part25,__vec24);
+        float *__ptr26 = u[i];
+        float *__ptr27 = uold[i];
+        __m512 __vec28 = _mm512_loadu_ps(&__ptr27[j]);
+        __m512 __vec31 = _mm512_mul_ps(__vec30,__vec29);
+        __m512 __vec32 = _mm512_sub_ps(__vec31,__vec28);
+        _mm512_storeu_ps(&__ptr26[j],__vec32);
+        __m512 __vec36 = _mm512_mul_ps(__vec35,__vec34);
+        __m512 __vec37 = _mm512_add_ps(__vec36,__vec33);
+        __part38 = _mm512_add_ps(__part38,__vec37);
       }
+      __m256 __buf3 = _mm512_extractf32x8_ps(__part38,0);
+      __m256 __buf4 = _mm512_extractf32x8_ps(__part38,1);
+      __buf4 = _mm256_add_ps(__buf3,__buf4);
+      __buf4 = _mm256_hadd_ps(__buf4,__buf4);
+      __buf4 = _mm256_hadd_ps(__buf4,__buf4);
+      float __buf5[8];
+      _mm256_storeu_ps(&__buf5,__buf4);
+      error = __buf5[0] + __buf5[6];
+      __m256 __buf0 = _mm512_extractf32x8_ps(__part25,0);
+      __m256 __buf1 = _mm512_extractf32x8_ps(__part25,1);
+      __buf1 = _mm256_add_ps(__buf0,__buf1);
+      __buf1 = _mm256_hadd_ps(__buf1,__buf1);
+      __buf1 = _mm256_hadd_ps(__buf1,__buf1);
+      float __buf2[8];
+      _mm256_storeu_ps(&__buf2,__buf1);
+      resid = __buf2[0] + __buf2[6];
     }
 /* Error check */
 //if (k % 500 == 0)

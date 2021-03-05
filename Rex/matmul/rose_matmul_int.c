@@ -42,6 +42,7 @@ void matmul_simd(int **A,int **B,int **C)
     for (j = 0; j < 512; j++) {
       temp = 0;
       __m512i __vec0 = _mm512_set1_epi32(temp);
+      __m512i __part7 = _mm512_setzero_epi32();
       for (k = 0; k <= 511; k += 16) {
         int *__ptr1 = A[i];
         __m512i __vec2 = _mm512_loadu_si512((__m512i *)(&__ptr1[k]));
@@ -49,15 +50,16 @@ void matmul_simd(int **A,int **B,int **C)
         __m512i __vec4 = _mm512_loadu_si512((__m512i *)(&__ptr3[k]));
         __m512i __vec5 = _mm512_mullo_epi32(__vec4,__vec2);
         __m512i __vec6 = _mm512_add_epi32(__vec5,__vec0);
-        __m256i __buf0 = _mm512_extracti32x8_epi32(__vec6,0);
-        __m256i __buf1 = _mm512_extracti32x8_epi32(__vec6,1);
-        __buf1 = _mm256_add_epi32(__buf0,__buf1);
-        __buf1 = _mm256_hadd_epi32(__buf1,__buf1);
-        __buf1 = _mm256_hadd_epi32(__buf1,__buf1);
-        int __buf2[8];
-        _mm256_storeu_si256((__m256i *)(&__buf2),__buf1);
-        temp += __buf2[0] + __buf2[6];
+        __part7 = _mm512_add_epi32(__part7,__vec6);
       }
+      __m256i __buf0 = _mm512_extracti32x8_epi32(__part7,0);
+      __m256i __buf1 = _mm512_extracti32x8_epi32(__part7,1);
+      __buf1 = _mm256_add_epi32(__buf0,__buf1);
+      __buf1 = _mm256_hadd_epi32(__buf1,__buf1);
+      __buf1 = _mm256_hadd_epi32(__buf1,__buf1);
+      int __buf2[8];
+      _mm256_storeu_si256((__m256i *)(&__buf2),__buf1);
+      temp = __buf2[0] + __buf2[6];
       C[i][j] = temp;
     }
   }

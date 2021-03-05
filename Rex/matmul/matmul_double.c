@@ -36,9 +36,9 @@ void matmul_simd(double **A, double **B, double **C) {
     for (i = 0; i < N; i++) {
         for (j = 0; j < N; j++) {
             temp = 0;
-            #pragma omp simd
+            #pragma omp simd reduction(+:temp)
             for (k = 0; k < N; k++) {
-                temp = temp + A[i][k] * B[j][k];
+                temp += A[i][k] * B[j][k];
             }
             C[i][j] = temp;
         }

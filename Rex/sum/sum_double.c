@@ -26,7 +26,7 @@ void init(double *X) {
 double sum(double *X) {
     double result = 0;
     
-    #pragma omp simd
+    #pragma omp simd reduction(+:result)
     for (int i = 0; i<N; i++) {
         result += X[i];
     }
